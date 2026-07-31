@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """在 GitHub Actions 中运行：下载美股 + A股 ETF 复权日线。
-v3（2026-07-31）：逐品种校验 + 与仓库现有数据合并——任何品种在本次下载中
-缺失或异常时，保留该品种的旧列而不是提交空列（修复 QQQ 空列事故）。"""
+v4（2026-07-31）：A股宇宙扩充至 ~40 只（随机池对照实验用）。
+保留 v3 的逐品种校验 + 与仓库现有数据列级合并（异常品种保留旧列）。
+新增品种若 Yahoo 无数据会在日志中警告并跳过，属预期行为。"""
 import os
 import sys
 import time
@@ -10,12 +11,44 @@ import pandas as pd
 import yfinance as yf
 
 US_TICKERS = ["SPY", "QQQ", "IWM", "EFA", "EEM", "TLT", "GLD", "SHY", "BIL"]
+
 CN_TICKERS = {
+    # ---- 现有生产池（勿删） ----
     "510300": "510300.SS", "510500": "510500.SS", "512100": "512100.SS",
     "510880": "510880.SS", "512010": "512010.SS", "159928": "159928.SZ",
     "512800": "512800.SS", "512880": "512880.SS", "512660": "512660.SS",
     "512480": "512480.SS", "512690": "512690.SS", "512400": "512400.SS",
     "518880": "518880.SS", "511010": "511010.SS",
+    # ---- 宽基/风格扩充 ----
+    "510050": "510050.SS",  # 上证50
+    "510180": "510180.SS",  # 上证180
+    "159901": "159901.SZ",  # 深证100
+    "159915": "159915.SZ",  # 创业板
+    "159949": "159949.SZ",  # 创业板50
+    "588000": "588000.SS",  # 科创50
+    "159905": "159905.SZ",  # 深红利
+    # ---- 行业/主题扩充 ----
+    "512170": "512170.SS",  # 医疗
+    "159938": "159938.SZ",  # 医药卫生(广发)
+    "159996": "159996.SZ",  # 家电
+    "512000": "512000.SS",  # 券商
+    "510230": "510230.SS",  # 金融
+    "512710": "512710.SS",  # 军工龙头
+    "159995": "159995.SZ",  # 芯片
+    "515050": "515050.SS",  # 5G通信
+    "159939": "159939.SZ",  # 信息技术
+    "512720": "512720.SS",  # 计算机
+    "515000": "515000.SS",  # 科技龙头
+    "515030": "515030.SS",  # 新能源车
+    "515790": "515790.SS",  # 光伏
+    "516160": "516160.SS",  # 新能源
+    "515220": "515220.SS",  # 煤炭
+    "159930": "159930.SZ",  # 能源
+    "512200": "512200.SS",  # 房地产
+    "512980": "512980.SS",  # 传媒
+    "159825": "159825.SZ",  # 农业
+    "510410": "510410.SS",  # 资源
+    "512580": "512580.SS",  # 环保
 }
 
 
@@ -33,7 +66,7 @@ def fetch(tickers):
 
 
 def merge_and_save(new, filename, min_rows=1000):
-    """逐品种校验；异常品种保留仓库现有旧列。全列均无有效数据才失败。"""
+    """逐品种校验；异常品种保留仓库现有旧列；全新品种不足 min_rows 则跳过并警告。"""
     old = pd.read_csv(filename, index_col=0, parse_dates=True) if os.path.exists(filename) else None
     kept, degraded = {}, []
     for t in new.columns:
@@ -45,7 +78,7 @@ def merge_and_save(new, filename, min_rows=1000):
             kept[t] = old[t]
             degraded.append(f"{t}(new={n_new}, kept old={n_old})")
         else:
-            degraded.append(f"{t}(new={n_new}, NO fallback)")
+            degraded.append(f"{t}(new={n_new}, skipped)")
     if not kept:
         raise SystemExit(f"{filename}: no valid columns at all")
     out = pd.DataFrame(kept).sort_index().dropna(how="all")
@@ -62,4 +95,4 @@ merge_and_save(us[[c for c in US_TICKERS if c in us.columns]], "us_etf_daily.csv
 
 cn_raw = fetch(list(CN_TICKERS.values()))
 cn = cn_raw.rename(columns={v: k for k, v in CN_TICKERS.items()})
-merge_and_save(cn[[c for c in CN_TICKERS if c in cn.columns]], "cn_etf_daily.csv", 800)
+merge_and_save(cn[[c for c in CN_TICKERS.keys() if c in cn.columns]], "cn_etf_daily.csv", 800)
