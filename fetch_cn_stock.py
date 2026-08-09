@@ -67,7 +67,7 @@ def quarter_ends(start: str, end: str) -> list[str]:
 
 # ---------------- 1) PIT 宇宙 ----------------
 
-def fetch_universe(bs, start: str, end: str) -> pd.DataFrame:
+def fetch_universe(bs, start: str, end: str, save: bool = True) -> pd.DataFrame:
     frames = []
     for d in month_ends(start, end):
         df = rs_to_df(bs.query_all_stock(day=d))
@@ -84,8 +84,12 @@ def fetch_universe(bs, start: str, end: str) -> pd.DataFrame:
         df["month_end"] = d
         frames.append(df)
         time.sleep(0.1)
+    if not frames:   # 区间内无月末（如月中跑增量）：空结果是合法情形，不崩溃
+        print("::warning::no month-end snapshots in range, universe unchanged")
+        return pd.DataFrame(columns=["code", "tradeStatus", "code_name", "month_end"])
     out = pd.concat(frames, ignore_index=True)
-    out.to_csv(OUT / "universe_monthly.csv.gz", index=False)
+    if save:
+        out.to_csv(OUT / "universe_monthly.csv.gz", index=False)
     print(f"universe: {len(out)} rows, {out['month_end'].nunique()} month-ends, "
           f"{out['code'].nunique()} distinct codes")
     return out
@@ -263,13 +267,18 @@ def main():
 
     if args.mode == "incremental":
         # 前提：workflow 已把上一版 Release 的 out/ 下载到位
+        old_u = OUT / "universe_monthly.csv.gz"
+        if not old_u.exists():
+            raise SystemExit("增量模式找不到历史数据（universe_monthly.csv.gz 缺失）——"
+                             "请先手动运行一次 mode=bulk 生成首版数据包")
         year_start = f"{pd.Timestamp.now(tz='UTC').year}-01-01"
         recent = (pd.Timestamp.now(tz='UTC') - pd.Timedelta(days=400)).strftime("%Y-%m-%d")
         bs = bs_login()
-        uni_new = fetch_universe(bs, pd.Timestamp.now(tz='UTC').strftime("%Y-%m-01"), end)
-        old_u = OUT / "universe_monthly.csv.gz"
-        if old_u.exists():
-            old = pd.read_csv(old_u)
+        # 先读旧、后抓新（save=False 防止覆盖历史宇宙文件），再合并落盘
+        old = pd.read_csv(old_u)
+        uni_start = (pd.Timestamp.now(tz='UTC') - pd.Timedelta(days=40)).strftime("%Y-%m-%d")
+        uni_new = fetch_universe(bs, uni_start, end, save=False)
+        if len(uni_new):
             merged = (pd.concat([old, uni_new], ignore_index=True)
                       .drop_duplicates(subset=["month_end", "code"], keep="last"))
             merged.to_csv(old_u, index=False)
