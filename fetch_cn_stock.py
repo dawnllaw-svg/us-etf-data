@@ -43,6 +43,9 @@ DAILY_FIELDS = "date,code,close,volume,amount,turn,tradestatus,isST,peTTM,pbMRQ,
 # ---------------- baostock 基础 ----------------
 
 def bs_login():
+    import socket
+    socket.setdefaulttimeout(120)   # v1.2: baostock 无内建超时，网络断连会永远挂起；
+                                    # 全局 socket 超时把"挂死"转化为可捕获、可跳过的异常
     import baostock as bs
     lg = bs.login()
     if lg.error_code != "0":
@@ -67,16 +70,31 @@ def quarter_ends(start: str, end: str) -> list[str]:
 
 # ---------------- 1) PIT 宇宙 ----------------
 
+def _try_all_stock(bs, day: str) -> pd.DataFrame:
+    """v1.2: 单次快照带异常保护——超时/断连打警告返回空表，不再挂死整个任务。"""
+    try:
+        return rs_to_df(bs.query_all_stock(day=day))
+    except Exception as e:
+        print(f"::warning::query_all_stock {day} failed: {type(e).__name__}: {e}")
+        return pd.DataFrame()
+
+
 def fetch_universe(bs, start: str, end: str, save: bool = True) -> pd.DataFrame:
     frames = []
-    for d in month_ends(start, end):
-        df = rs_to_df(bs.query_all_stock(day=d))
+    dates = month_ends(start, end)
+    t0 = time.time()
+    for i, d in enumerate(dates):
+        df = _try_all_stock(bs, d)
         if df.empty:            # 节假日月末：往前找最近交易日（最多回退 10 天）
             for k in range(1, 11):
                 d2 = (pd.Timestamp(d) - pd.Timedelta(days=k)).strftime("%Y-%m-%d")
-                df = rs_to_df(bs.query_all_stock(day=d2))
+                df = _try_all_stock(bs, d2)
                 if not df.empty:
                     break
+        if (i + 1) % 12 == 0:   # v1.2: 每 12 个月末打一行进度，宇宙阶段不再静默
+            rate = (i + 1) / max(time.time() - t0, 1)
+            eta = (len(dates) - i - 1) / max(rate, 1e-9)
+            print(f"  universe progress {i+1}/{len(dates)} ({d}), ETA {eta/60:.0f}min")
         if df.empty:
             print(f"::warning::universe {d} empty, skipped")
             continue
@@ -254,7 +272,14 @@ def main():
 
     if args.mode == "bulk":
         bs = bs_login()
-        uni = fetch_universe(bs, args.start, end)
+        uni_file = OUT / "universe_monthly.csv.gz"
+        if uni_file.exists():   # v1.2: 缓存里已有完整宇宙（上次跑到日线阶段）→ 直接复用，省 30-60 分钟
+            uni = pd.read_csv(uni_file)
+            print(f"universe cached, reusing: {len(uni)} rows, {uni['month_end'].nunique()} month-ends")
+        else:
+            uni = fetch_universe(bs, args.start, end)
+        if uni.empty:
+            raise SystemExit("宇宙抓取全部失败（baostock 通道异常）——中止任务，避免发布空数据包。稍后重跑即可。")
         codes = sorted(uni["code"].unique())
         if args.test:
             codes = codes[:5]
