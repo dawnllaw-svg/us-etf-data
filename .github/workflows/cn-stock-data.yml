@@ -51,7 +51,7 @@ jobs:
           fi
 
       - name: Fetch data
-        run: python fetch_cn_stock.py ${{ github.event.inputs.mode || 'incremental' }}
+        run: python -u fetch_cn_stock.py ${{ github.event.inputs.mode || 'incremental' }}
 
       - name: Publish release
         if: ${{ (github.event.inputs.mode || 'incremental') != 'probe' }}
