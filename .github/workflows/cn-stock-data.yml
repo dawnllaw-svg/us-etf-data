@@ -27,7 +27,7 @@ jobs:
           mkdir -p out
           TAG=$(gh release list --limit 30 --json tagName -q '[.[] | select(.tagName | startswith("cn-stock-")) | .tagName][0]' || true)
           if [ -n "$TAG" ]; then
-            gh release download "$TAG" -D out --clobber -p 'universe_monthly.csv.gz' -p 'fundamentals_quarterly.csv.gz' -p 'cashflow_quarterly.csv.gz' || true
+            gh release download "$TAG" -D out --clobber -p 'universe_monthly.csv.gz' -p 'fundamentals_quarterly.csv.gz' -p 'cashflow_quarterly.csv.gz' -p 'industry_map.csv.gz' || true
             echo "downloaded $TAG"
           else
             echo "::error::no cn-stock release found"; exit 1
@@ -43,7 +43,7 @@ jobs:
           TAG="cn-stock-$(date -u +%F)"
           gh release delete "$TAG" -y 2>/dev/null || true
           gh release create "$TAG" -t "$TAG" -n "Phase 6 monthly refresh $(date -u +%F)" \
-            out/universe_monthly.csv.gz out/fundamentals_quarterly.csv.gz out/cashflow_quarterly.csv.gz
+            out/universe_monthly.csv.gz out/fundamentals_quarterly.csv.gz out/cashflow_quarterly.csv.gz out/industry_map.csv.gz
           echo "{\"release_tag\":\"$TAG\",\"updated_utc\":\"$(date -u +%FT%TZ)\"}" > cn_stock_manifest.json
           git config user.name "etf-data-bot"
           git config user.email "actions@users.noreply.github.com"
