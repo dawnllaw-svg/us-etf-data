@@ -1,16 +1,9 @@
-name: CN stock fundamental data (Phase 6)
+name: CN stock data (Phase 6, monthly)
 
 on:
   schedule:
-    - cron: "30 12 1 * *"      # 每月 1 日 UTC 12:30（A股月末收盘后）增量更新
-  workflow_dispatch:
-    inputs:
-      mode:
-        description: "bulk = 历史全量（首次运行选这个）；incremental = 增量"
-        required: true
-        default: "incremental"
-        type: choice
-        options: [bulk, incremental, probe]
+    - cron: "30 1 2 * *"        # 每月 2 日 UTC 01:30（A股月末收盘后，北京时间 9:30）
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -18,58 +11,44 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - run: pip install pandas akshare
 
-      - run: pip install pandas pyarrow baostock akshare
-
-      # 断点缓存：bulk 中途失败重跑时跳过已完成股票
-      - uses: actions/cache@v4
-        with:
-          path: out
-          key: cn-stock-out-${{ github.run_id }}
-          restore-keys: cn-stock-out-
-
-      # 增量模式先取回上一版数据
-      - name: Download previous release (incremental only)
-        if: ${{ (github.event.inputs.mode || 'incremental') == 'incremental' }}
+      - name: Download latest data release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p out
-          TAG=$(gh release list --limit 20 --json tagName -q '[.[] | select(.tagName | startswith("cn-stock-")) | .tagName][0]' || true)
+          TAG=$(gh release list --limit 30 --json tagName -q '[.[] | select(.tagName | startswith("cn-stock-")) | .tagName][0]' || true)
           if [ -n "$TAG" ]; then
-            gh release download "$TAG" -D out --clobber || true
-            echo "downloaded release $TAG"
+            gh release download "$TAG" -D out --clobber -p 'universe_monthly.csv.gz' -p 'fundamentals_quarterly.csv.gz' -p 'cashflow_quarterly.csv.gz' || true
+            echo "downloaded $TAG"
           else
-            echo "::warning::no previous cn-stock release found; run bulk first"
+            echo "::error::no cn-stock release found"; exit 1
           fi
 
-      - name: Fetch data
-        run: python -u fetch_cn_stock.py ${{ github.event.inputs.mode || 'incremental' }}
+      - name: Refresh
+        run: python -u update_cn_stock_monthly.py
 
       - name: Publish release
-        if: ${{ (github.event.inputs.mode || 'incremental') != 'probe' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="cn-stock-$(date -u +%F)"
           gh release delete "$TAG" -y 2>/dev/null || true
-          gh release create "$TAG" -t "$TAG" -n "CN stock data ($(date -u +%F), mode=${{ github.event.inputs.mode || 'incremental' }})" out/*
-          # 仓库里只留 manifest（供沙箱发现最新 tag），大数据全走 Release
-          cp out/manifest.json cn_stock_manifest.json
-          python -c "import json;d=json.load(open('cn_stock_manifest.json'));d['release_tag']='$TAG';json.dump(d,open('cn_stock_manifest.json','w'),indent=1)"
+          gh release create "$TAG" -t "$TAG" -n "Phase 6 monthly refresh $(date -u +%F)" \
+            out/universe_monthly.csv.gz out/fundamentals_quarterly.csv.gz out/cashflow_quarterly.csv.gz
+          echo "{\"release_tag\":\"$TAG\",\"updated_utc\":\"$(date -u +%FT%TZ)\"}" > cn_stock_manifest.json
           git config user.name "etf-data-bot"
           git config user.email "actions@users.noreply.github.com"
           git add cn_stock_manifest.json
           git diff --cached --quiet || git commit -m "cn stock manifest $TAG"
           git push
-          # 清理 30 天前的旧 release，仓库存储不膨胀
-          for T in $(gh release list --limit 100 --json tagName,createdAt -q '.[] | select(.tagName | startswith("cn-stock-")) | select(.createdAt < (now - 2592000 | todate)) | .tagName'); do
+          for T in $(gh release list --limit 100 --json tagName,createdAt -q '.[] | select(.tagName | startswith("cn-stock-")) | select(.createdAt < (now - 7776000 | todate)) | .tagName'); do
             gh release delete "$T" -y --cleanup-tag || true
           done
