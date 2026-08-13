@@ -2,7 +2,8 @@ name: CN stock data (Phase 6, monthly)
 
 on:
   schedule:
-    - cron: "30 1 2 * *"        # 每月 2 日 UTC 01:30（A股月末收盘后，北京时间 9:30）
+    - cron: "30 0 1-3 * *"     # 每月 1-3 日 UTC 00:30（北京 8:30）。首日完成；2-3 日为幂等重试
+    # 注意：GitHub cron 不支持 L（月末）等扩展写法，勿改成 L
   workflow_dispatch: {}
 
 permissions:
