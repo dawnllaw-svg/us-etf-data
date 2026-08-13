@@ -83,12 +83,12 @@ def refresh_quarters(ak, n_recent=3):
         print(f"{dest.name}: {len(new)} 行 / {new.report_date.nunique()} 季")
 
 
-if __name__ == "__main__":
-    import numpy as np  # noqa: F401  (refresh_universe 内使用)
-    globals()["np"] = np
-    import akshare as ak
-    me = (pd.Timestamp.today().normalize().replace(day=1) - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
-    print(f"=== Phase 6 月度刷新，月末={me} ===")
-    refresh_universe(ak, me)
-    refresh_quarters(ak)
-    print("完成")
+def refresh_industry(ak, month_end):
+    """月度追加一期行业快照；随时间积累即成为真正的 PIT 行业历史。"""
+    I = OUT / "industry_map.csv.gz"
+    try:
+        info = retry(ak.sw_index_first_info)
+        if info is None or info.empty:
+            print("::warning::申万行业信息为空，跳过行业快照"); return
+        ncol = "行业名称" if "行业名称" in info.columns else info.columns[1]
+        ccol = "行业代码
