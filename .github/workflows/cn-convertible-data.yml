@@ -1,0 +1,52 @@
+name: CN convertible bond data (idea #2026-04, daily snapshot)
+
+on:
+  schedule:
+    - cron: "45 8 * * 1-5"     # 交易日北京 16:45（UTC 08:45）收盘后抓当日比价表快照
+    # 节假日会空跑：脚本对非交易日返回的旧数据按 snap_date 去重，幂等无害
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "probe / snapshot / bulk"
+        default: "snapshot"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas pyarrow akshare
+
+      - name: Download latest data release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p out
+          TAG=$(gh release list --limit 30 --json tagName -q '[.[] | select(.tagName | startswith("cn-cb-")) | .tagName][0]' || true)
+          if [ -n "$TAG" ]; then
+            gh release download "$TAG" -D out --clobber || true
+            echo "downloaded $TAG"
+          else
+            echo "首次运行，无历史数据包（正常）"
+          fi
+
+      - name: Fetch
+        run: python -u fetch_cn_convertible.py ${{ github.event.inputs.mode || 'snapshot' }}
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="cn-cb-$(date -u +%F)"
+          gh release delete "$TAG" -y 2>/dev/null || true
+          gh release create "$TAG" -t "$TAG" -n "CB data refresh $(date -u +%F)" out/cb_*
+          for T in $(gh release list --limit 100 --json tagName,createdAt -q '.[] | select(.tagName | startswith("cn-cb-")) | select(.createdAt < (now - 2592000 | todate)) | .tagName'); do
+            gh release delete "$T" -y --cleanup-tag || true
+          done
