@@ -66,29 +66,43 @@ def _retry(fn, name: str, tries: int = 3, sleep: float = 5.0):
 
 # ---------------- 1) 每日快照（PIT 核心资产） ----------------
 
+def _code_col(df: pd.DataFrame) -> str:
+    return next((c for c in df.columns if "债券代码" in str(c)),
+                next((c for c in df.columns if "代码" in str(c)), df.columns[0]))
+
+
 def fetch_snapshot(ak) -> bool:
     today = pd.Timestamp.now(tz="Asia/Shanghai").strftime("%Y-%m-%d")
-    df = _retry(lambda: ak.bond_cov_comparison(), "bond_cov_comparison")
+    # 降级链（2026-08-17 实测：GitHub runner 上比价表接口被东财掐断，发行列表接口畅通，
+    # 且 bond_zh_cov 本身含 债现价/转股价/转股价值/转股溢价率 列，可独立充当快照源）
+    df, src = _retry(lambda: ak.bond_cov_comparison(), "bond_cov_comparison", tries=2), "cov_comparison"
     if df is None:
-        print("::error::比价表快照获取失败——今日快照缺失，重试窗口内会自动补")
+        df, src = _retry(lambda: ak.bond_zh_cov(), "bond_zh_cov(快照降级)"), "zh_cov_fallback"
+        if df is not None and not any("溢价率" in str(c) for c in df.columns):
+            print("::warning::降级快照缺少转股溢价率列——东财改版？请人工核对列结构")
+    if df is None:
+        print("::error::两个快照源均失败——今日快照缺失，明日运行自动续上")
         return False
     df.insert(0, "snap_date", today)
+    df.insert(1, "snap_src", src)
     # 全列保留：接口列名可能随东财改版漂移，落盘原始列 + 快照日期，清洗留给消费端
     year = today[:4]
     fp = OUT / f"cb_snapshots_{year}.csv.gz"
+    df = df.astype(str)
     if fp.exists():
         old = pd.read_csv(fp, dtype=str)
-        df = df.astype(str)
-        merged = (pd.concat([old, df], ignore_index=True)
-                  .drop_duplicates(subset=["snap_date", old.columns[1]], keep="last"))
+        code = _code_col(df)
+        merged = pd.concat([old, df], ignore_index=True)
+        if code in merged.columns:
+            merged = merged.drop_duplicates(subset=["snap_date", code], keep="last")
     else:
-        merged = df.astype(str)
+        merged = df
     merged.to_csv(fp, index=False)
     n_today = (merged["snap_date"] == today).sum()
-    print(f"snapshot {today}: {n_today} 只转债入档（{fp.name} 共 {len(merged)} 行、"
+    print(f"snapshot {today} [{src}]: {n_today} 行入档（{fp.name} 共 {len(merged)} 行、"
           f"{merged['snap_date'].nunique()} 个交易日）")
     if n_today < 300:   # 2026-06 存量约 400+ 只；低于 300 视为疑似残缺
-        print(f"::warning::今日快照仅 {n_today} 只，疑似接口残缺，请人工核对")
+        print(f"::warning::今日快照仅 {n_today} 行，疑似接口残缺，请人工核对")
     return True
 
 
