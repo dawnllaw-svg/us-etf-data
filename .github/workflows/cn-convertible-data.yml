@@ -41,6 +41,7 @@ jobs:
         run: python -u fetch_cn_convertible.py ${{ github.event.inputs.mode || 'snapshot' }}
 
       - name: Publish release
+        if: ${{ (github.event.inputs.mode || 'snapshot') != 'probe' }}   # probe 只验接口，无产物可发布
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
