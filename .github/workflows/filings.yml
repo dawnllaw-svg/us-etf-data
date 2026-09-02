@@ -1,0 +1,83 @@
+# 放到 dawnllaw-svg/us-etf-data 仓库的 .github/workflows/filings.yml
+# 配套：fetch_filings.py 放在仓库根目录（用 Add file → Upload files 直接拖上去即可，不必新建 scripts/ 目录）
+# 作用：在 GitHub Actions（网络无限制）里抓 A股定期报告全文，发布为 Release 资产。
+# 沙箱侧只能访问 GitHub，因此这是把"附注读得到"变成常态的唯一稳妥路径。
+name: cn-filings
+
+on:
+  schedule:
+    - cron: "0 20 1 5,9 *"      # 每年 5 月、9 月 2 日 04:00 北京时间（年报 4/30、半年报 8/31 披露截止后）
+  workflow_dispatch:
+    inputs:
+      codes:
+        description: "6位股票代码，逗号分隔；留空则读仓库根目录 filings_codes.txt"
+        required: false
+      years:
+        description: "报告年份，逗号分隔"
+        required: false
+        default: "2025,2026"
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install requests pdfplumber
+
+      - name: Resolve codes
+        id: codes
+        run: |
+          if [ -n "${{ inputs.codes }}" ]; then
+            echo "list=${{ inputs.codes }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "list=$(tr -d ' \n' < filings_codes.txt)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch filings
+        run: |
+          python3 fetch_filings.py \
+            --codes "${{ steps.codes.outputs.list }}" \
+            --years "${{ inputs.years || '2025,2026' }}" \
+            --out dist
+
+      - name: Summary
+        run: |
+          python3 - <<'PY'
+          import json
+          m = json.load(open("dist/filings_manifest.json"))["reports"]
+          ok = [r for r in m if r.get("file")]
+          bad = [r for r in m if not r.get("file")]
+          print(f"取到 {len(ok)}/{len(m)} 份")
+          for r in bad:
+              print("FAILED:", r.get("code"), r.get("title"))
+          PY
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="cn-filings-$(date -u +%Y-%m-%d)"
+          gh release create "$TAG" dist/* --title "$TAG" --notes "A股定期报告全文与关键科目（自动抓取）" || \
+          gh release upload "$TAG" dist/* --clobber
+
+      - name: Update manifest in repo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="cn-filings-$(date -u +%Y-%m-%d)"
+          printf '{"release_tag": "%s", "updated_utc": "%s"}\n' "$TAG" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > cn_filings_manifest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cn_filings_manifest.json
+          git commit -m "chore: update cn_filings manifest to $TAG" || exit 0
+          git push
