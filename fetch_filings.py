@@ -193,7 +193,11 @@ def run(codes: list[str], years: list[int], outdir: Path) -> None:
                 url = cninfo_pdf_url(code, title[:8], years)
                 if url:
                     text = pdf_text(url); via = "cninfo_pdf" if text else ""
-            key = f"{code}_{re.sub(r'[^0-9A-Za-z一-龥]', '', title)[:24]}"
+            # 资产名必须是纯 ASCII：GitHub Release 上传接口对中文文件名会 404
+            ym = re.search(r"(20\d{2})", title)
+            yr = ym.group(1) if ym else (rep["date"][:4] or "unknown")
+            typ = "interim" if "半年度" in title else ("annual" if "年度报告" in title else "other")
+            key = f"{code}_{yr}_{typ}"
             rec = dict(code=code, title=title, date=rep["date"], art_code=art,
                        via=via or "FAILED", pages=npages, chars=len(text),
                        file=f"filings_{key}.txt.gz" if text else None,
