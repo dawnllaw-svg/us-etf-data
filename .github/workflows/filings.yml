@@ -67,7 +67,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="cn-filings-$(date -u +%Y-%m-%d)"
-          gh release create "$TAG" dist/* --title "$TAG" --notes "A股定期报告全文与关键科目（自动抓取）" || \
+          # 先确保 release 存在（不带资产），再单独上传，避免 create 中途失败导致回滚
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "$TAG" --notes "A股定期报告全文与关键科目（自动抓取）"
           gh release upload "$TAG" dist/* --clobber
 
       - name: Update manifest in repo
