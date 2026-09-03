@@ -120,11 +120,21 @@ def pdf_text(url: str) -> str:
     return "\n".join(out)
 
 
-def cninfo_pdf_url(code: str, title_kw: str, years: list[int]) -> str:
-    """巨潮公告查询：按股票代码与关键词找终稿 PDF 路径。"""
+def cninfo_pdf_url(code: str, title: str, years: list[int]) -> str:
+    """巨潮公告查询：按股票代码与报告类型找终稿 PDF 路径。
+
+    要点（2026-09-03 修）：
+    - searchkey 传关键词经常匹配不到，改为不传 searchkey、只按 category 过滤后自行筛标题；
+    - category 按年报/半年报分开传，混传会命中另一类；
+    - 目标年份从标题里取（"2025年年度报告" → 2025），不能用公告发布年份。
+    """
     plate = "sz" if code[0] in "013" else "sh"
-    body = dict(pageNum=1, pageSize=30, column=plate, tabName="fulltext",
-                stock=f"{code},", searchkey=title_kw, category="category_ndbg_szsh;category_bndbg_szsh",
+    interim = "半年度" in title
+    cat = "category_bndbg_szsh" if interim else "category_ndbg_szsh"
+    ym = re.search(r"(20\d{2})", title)
+    want_year = ym.group(1) if ym else ""
+    body = dict(pageNum=1, pageSize=50, column=plate, tabName="fulltext",
+                stock=f"{code},", searchkey="", category=cat,
                 seDate="", sortName="", sortType="", isHLtitle="true")
     for attempt in range(2):
         try:
@@ -136,12 +146,16 @@ def cninfo_pdf_url(code: str, title_kw: str, years: list[int]) -> str:
         except Exception:
             anns = []
         for a in anns:
-            t = a.get("announcementTitle", "")
-            yr = time.strftime("%Y", time.localtime((a.get("announcementTime") or 0) / 1000))
-            if "摘要" in t or "英文" in t:
+            t = re.sub(r"<[^>]+>", "", a.get("announcementTitle", ""))
+            if any(x in t for x in ("摘要", "英文", "已取消", "更正")):
                 continue
-            if int(yr) in years or int(yr) - 1 in years:
-                return CNINFO_HOST + a["adjunctUrl"]
+            if interim and "半年度报告" not in t:
+                continue
+            if not interim and ("年度报告" not in t or "半年度" in t):
+                continue
+            if want_year and want_year not in t:
+                continue
+            return CNINFO_HOST + a["adjunctUrl"]
         time.sleep(2)
     return ""
 
@@ -187,10 +201,16 @@ def run(codes: list[str], years: list[int], outdir: Path) -> None:
             if art:
                 text, npages = em_fulltext(art)
                 via = "eastmoney_paged" if text else ""
+            # 分页通道返回过短（page_size=1 之类的截断）也视为失败，继续走 PDF 通道。
+            # 定期报告全文正常在 20 万字符以上，5 万以下必是截断。
+            if len(text) < 50_000:
+                if text:
+                    print(f"  分页正文仅 {len(text):,} 字符，判为截断，转 PDF 通道", flush=True)
+                text = ""
             if not text and rep.get("attach"):
                 text = pdf_text(rep["attach"]); via = "eastmoney_pdf" if text else ""
             if not text:
-                url = cninfo_pdf_url(code, title[:8], years)
+                url = cninfo_pdf_url(code, title, years)
                 if url:
                     text = pdf_text(url); via = "cninfo_pdf" if text else ""
             # 资产名必须是纯 ASCII：GitHub Release 上传接口对中文文件名会 404
