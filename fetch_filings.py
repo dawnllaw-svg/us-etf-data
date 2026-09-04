@@ -30,8 +30,8 @@ import requests
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 EM_INDEX = "https://np-anotice-stock.eastmoney.com/api/security/ann"
 EM_CONTENT = "https://np-cnotice-stock.eastmoney.com/api/content/ann"
-CNINFO_QUERY = "http://www.cninfo.com.cn/new/hisAnnouncement/query"
-CNINFO_HOST = "http://static.cninfo.com.cn/"
+CNINFO_QUERY = "https://www.cninfo.com.cn/new/hisAnnouncement/query"
+CNINFO_HOST = "https://static.cninfo.com.cn/"
 TIMEOUT = 60
 
 
@@ -106,7 +106,17 @@ def em_fulltext(art_code: str) -> tuple[str, int]:
     return "\n".join(parts), n
 
 
-# ---------------- 通道 2/3：PDF 全文 ----------------
+# ---------------- 通道 2/3/4：PDF 全文 ----------------
+
+def dfcfw_pdf_url(art_code: str) -> str:
+    """东财终稿 PDF 的稳定命名：https://pdf.dfcfw.com/pdf/H2_<art_code>_1.pdf
+
+    2026-09-04 增补。此前回退依赖 attach_url（常为空）与巨潮查询（参数易错），
+    对 page_size=0 的公司全部落空；而该 URL 只要有 art_code 就能拼出来，是最稳的一条。
+    """
+    return f"https://pdf.dfcfw.com/pdf/H2_{art_code}_1.pdf" if art_code else ""
+
+
 
 def pdf_text(url: str) -> str:
     import pdfplumber
@@ -128,12 +138,13 @@ def cninfo_pdf_url(code: str, title: str, years: list[int]) -> str:
     - category 按年报/半年报分开传，混传会命中另一类；
     - 目标年份从标题里取（"2025年年度报告" → 2025），不能用公告发布年份。
     """
-    plate = "sz" if code[0] in "013" else "sh"
+    is_sz = code[0] in "013"
+    plate, column = ("sz", "szse") if is_sz else ("sh", "sse")
     interim = "半年度" in title
     cat = "category_bndbg_szsh" if interim else "category_ndbg_szsh"
     ym = re.search(r"(20\d{2})", title)
     want_year = ym.group(1) if ym else ""
-    body = dict(pageNum=1, pageSize=50, column=plate, tabName="fulltext",
+    body = dict(pageNum=1, pageSize=50, column=column, plate=plate, tabName="fulltext",
                 stock=f"{code},", searchkey="", category=cat,
                 seDate="", sortName="", sortType="", isHLtitle="true")
     for attempt in range(2):
@@ -207,12 +218,21 @@ def run(codes: list[str], years: list[int], outdir: Path) -> None:
                 if text:
                     print(f"  分页正文仅 {len(text):,} 字符，判为截断，转 PDF 通道", flush=True)
                 text = ""
+            tried = []
+            if not text:
+                u = dfcfw_pdf_url(art)
+                if u:
+                    text = pdf_text(u); via = "dfcfw_pdf" if text else ""
+                    tried.append(f"dfcfw_pdf:{'ok' if text else 'empty'}")
             if not text and rep.get("attach"):
                 text = pdf_text(rep["attach"]); via = "eastmoney_pdf" if text else ""
+                tried.append(f"attach_pdf:{'ok' if text else 'empty'}")
             if not text:
                 url = cninfo_pdf_url(code, title, years)
+                tried.append(f"cninfo_query:{'found' if url else 'no_match'}")
                 if url:
                     text = pdf_text(url); via = "cninfo_pdf" if text else ""
+                    tried.append(f"cninfo_pdf:{'ok' if text else 'empty'}")
             # 资产名必须是纯 ASCII：GitHub Release 上传接口对中文文件名会 404
             ym = re.search(r"(20\d{2})", title)
             yr = ym.group(1) if ym else (rep["date"][:4] or "unknown")
@@ -220,6 +240,7 @@ def run(codes: list[str], years: list[int], outdir: Path) -> None:
             key = f"{code}_{yr}_{typ}"
             rec = dict(code=code, title=title, date=rep["date"], art_code=art,
                        via=via or "FAILED", pages=npages, chars=len(text),
+                       fallback=";".join(tried) if tried else "",
                        file=f"filings_{key}.txt.gz" if text else None,
                        fetched_utc=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
             manifest.append(rec)
