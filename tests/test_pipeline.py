@@ -11,6 +11,13 @@ from update_cn_stock_monthly import merge_preserving, recent_quarters, bs_frame
 
 
 class PipelineTests(unittest.TestCase):
+    def test_intraday_candle_excluded_until_market_close(self):
+        frame = pd.DataFrame({'A': [1, 2]}, index=pd.to_datetime(['2026-09-25', '2026-09-28']))
+        china = download.completed_sessions(frame, 'Asia/Shanghai', 15, '2026-09-28T04:00:00Z')
+        self.assertEqual(len(china), 1)
+        us = download.completed_sessions(frame, 'America/New_York', 16, '2026-09-28T22:30:00Z')
+        self.assertEqual(len(us), 2)
+
     def test_restatement_does_not_erase_balance_sheet(self):
         old = pd.DataFrame([dict(code6='000001', report_date='20260331', debt_ratio=50, eps=1)])
         new = pd.DataFrame([dict(code6='000001', report_date='20260331', eps=2)])

@@ -75,6 +75,16 @@ def fetch(tickers):
     raise SystemExit(f"download failed: {last_err}")
 
 
+def completed_sessions(frame, timezone, close_hour, now=None):
+    """Do not publish an in-progress daily candle from a manual intraday run."""
+    local = pd.Timestamp(now or pd.Timestamp.now(tz='UTC')).tz_convert(timezone)
+    cutoff = local.date()
+    if (local.hour, local.minute) < (close_hour, 15):
+        cutoff -= pd.Timedelta(days=1)
+    dates = pd.DatetimeIndex(frame.index).date
+    return frame.loc[dates <= cutoff]
+
+
 def merge_and_save(new, filename, min_rows=1000, expected=None, today=None):
     """逐品种校验；异常品种保留仓库现有旧列；全新品种不足 min_rows 则跳过并警告。"""
     old = pd.read_csv(filename, index_col=0, parse_dates=True) if os.path.exists(filename) else None
@@ -122,9 +132,9 @@ def merge_and_save(new, filename, min_rows=1000, expected=None, today=None):
 
 
 def main():
-    us = fetch(US_TICKERS)
+    us = completed_sessions(fetch(US_TICKERS), 'America/New_York', 16)
     uq = merge_and_save(us, 'us_etf_daily.csv', 1000, expected=US_TICKERS)
-    cn_raw = fetch(list(CN_TICKERS.values()))
+    cn_raw = completed_sessions(fetch(list(CN_TICKERS.values())), 'Asia/Shanghai', 15)
     cn = cn_raw.rename(columns={v: k for k, v in CN_TICKERS.items()})
     cq = merge_and_save(cn, 'cn_etf_daily.csv', 800, expected=list(CN_TICKERS))
     # Optional ETF gaps are explicit warnings; complete market failure is fatal.
