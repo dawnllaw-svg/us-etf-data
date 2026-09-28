@@ -83,7 +83,10 @@ def fetch_snapshot(ak) -> bool:
     if df is None:
         print("::error::两个快照源均失败——今日快照缺失，明日运行自动续上")
         return False
-    df.insert(0, "snap_date", today)
+    if len(df) < 300 or not any('溢价率' in str(c) for c in df.columns):
+        print('::error::Incomplete convertible snapshot; keep prior history and stop publication')
+        return False
+    df.insert(0, "snap_date", today)  # Observation date, not a verified quote/trading date.
     df.insert(1, "snap_src", src)
     # 全列保留：接口列名可能随东财改版漂移，落盘原始列 + 快照日期，清洗留给消费端
     year = today[:4]
@@ -133,6 +136,7 @@ def fetch_daily_bulk(ak, test: bool = False):
     done = set(CHECKPOINT.read_text().split()) if CHECKPOINT.exists() else set()
     print(f"daily bulk: {len(codes)} codes, {len(done)} done")
     buf, t0, n = [], time.time(), 0
+    successful = []
     for code in codes:
         if code in done:
             continue
@@ -142,10 +146,9 @@ def fetch_daily_bulk(ak, test: bool = False):
             if df is not None and len(df):
                 df["code"] = code
                 buf.append(df)
+                successful.append(code)
         except Exception as e:
             print(f"::warning::{sym} daily failed: {type(e).__name__}: {str(e)[:120]}")
-        with open(CHECKPOINT, "a") as f:
-            f.write(code + "\n")
         n += 1
         if n % 25 == 0:
             rate = n / max(time.time() - t0, 1)
@@ -162,6 +165,9 @@ def fetch_daily_bulk(ak, test: bool = False):
                      .drop_duplicates(subset=["date", "code"], keep="last"))
             g.sort_values(["code", "date"]).to_parquet(fp)
             print(f"cb_daily_{y}.parquet: {len(g)} rows")
+        # A code is complete only once every buffered year has been persisted.
+        with open(CHECKPOINT, 'a') as f:
+            f.write(''.join(code + '\n' for code in successful))
 
 
 # ---------------- manifest ----------------

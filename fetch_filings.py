@@ -259,6 +259,8 @@ def run(codes: list[str], years: list[int], outdir: Path) -> None:
         json.dumps(items, ensure_ascii=False, indent=1), encoding="utf-8")
     ok = sum(1 for m in manifest if m.get("file"))
     print(f"\n完成：{ok}/{len(manifest)} 份报告取到全文 → {outdir}")
+    if not manifest or ok != len(manifest):
+        raise SystemExit('Incomplete filings: outputs retained for diagnosis; publication blocked')
 
 
 if __name__ == "__main__":

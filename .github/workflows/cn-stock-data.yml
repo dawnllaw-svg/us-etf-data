@@ -1,55 +1,42 @@
-name: CN stock data (Phase 6, monthly)
-
+name: CN stock data (monthly)
 on:
   schedule:
-    - cron: "30 0 1-3 * *"     # 每月 1-3 日 UTC 00:30（北京 8:30）。首日完成；2-3 日为幂等重试
-    # 注意：GitHub cron 不支持 L（月末）等扩展写法，勿改成 L
+    - cron: '30 0 1-3 * *'
   workflow_dispatch: {}
-
 permissions:
   contents: write
-
+concurrency:
+  group: cn-stock-data
+  cancel-in-progress: false
 jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - run: pip install pandas akshare
-
-      - name: Download latest data release
-        env:
-          GH_TOKEN: ${{ github.token }}
+          python-version: '3.12'
+      - run: pip install pandas akshare baostock
+      - run: python -m unittest discover -s tests -v
+      - name: Restore validated baseline
+        run: python release_data.py restore cn-stock-
+      - name: Refresh historical universe and financial statements
+        run: timeout 45m python -u update_cn_stock_monthly.py
+      - name: Publish complete snapshot
         run: |
-          mkdir -p out
-          TAG=$(gh release list --limit 30 --json tagName -q '[.[] | select(.tagName | startswith("cn-stock-")) | .tagName][0]' || true)
-          if [ -n "$TAG" ]; then
-            gh release download "$TAG" -D out --clobber -p 'universe_monthly.csv.gz' -p 'fundamentals_quarterly.csv.gz' -p 'cashflow_quarterly.csv.gz' -p 'industry_map.csv.gz' || true
-            echo "downloaded $TAG"
-          else
-            echo "::error::no cn-stock release found"; exit 1
-          fi
-
-      - name: Refresh
-        run: python -u update_cn_stock_monthly.py
-
-      - name: Publish release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG="cn-stock-$(date -u +%F)"
-          gh release delete "$TAG" -y 2>/dev/null || true
-          gh release create "$TAG" -t "$TAG" -n "Phase 6 monthly refresh $(date -u +%F)" \
-            out/universe_monthly.csv.gz out/fundamentals_quarterly.csv.gz out/cashflow_quarterly.csv.gz out/industry_map.csv.gz
-          echo "{\"release_tag\":\"$TAG\",\"updated_utc\":\"$(date -u +%FT%TZ)\"}" > cn_stock_manifest.json
-          git config user.name "etf-data-bot"
-          git config user.email "actions@users.noreply.github.com"
+          TAG="cn-stock-$(date -u +%F)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          python release_data.py publish "$TAG"
+          printf '{"release_tag":"%s","updated_utc":"%s"}\n' "$TAG" "$(date -u +%FT%TZ)" > cn_stock_manifest.json
+          git config user.name 'etf-data-bot'
+          git config user.email 'actions@users.noreply.github.com'
           git add cn_stock_manifest.json
           git diff --cached --quiet || git commit -m "cn stock manifest $TAG"
-          git push
-          for T in $(gh release list --limit 100 --json tagName,createdAt -q '.[] | select(.tagName | startswith("cn-stock-")) | select(.createdAt < (now - 7776000 | todate)) | .tagName'); do
-            gh release delete "$T" -y --cleanup-tag || true
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin main
+            if git push; then exit 0; fi
+            sleep $((i * 3))
           done
+          exit 1
