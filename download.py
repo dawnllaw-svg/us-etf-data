@@ -7,9 +7,9 @@ v4（2026-07-31）：A股宇宙扩充至 ~40 只（随机池对照实验用）�
 import os
 import sys
 import time
+import json
 
 import pandas as pd
-import yfinance as yf
 
 US_TICKERS = ["SPY", "QQQ", "IWM", "EFA", "EEM", "TLT", "GLD", "SHY", "BIL"]
 
@@ -62,6 +62,7 @@ CN_TICKERS = {
 
 
 def fetch(tickers):
+    import yfinance as yf
     last_err = None
     for attempt in range(3):
         try:
@@ -74,15 +75,18 @@ def fetch(tickers):
     raise SystemExit(f"download failed: {last_err}")
 
 
-def merge_and_save(new, filename, min_rows=1000):
+def merge_and_save(new, filename, min_rows=1000, expected=None, today=None):
     """逐品种校验；异常品种保留仓库现有旧列；全新品种不足 min_rows 则跳过并警告。"""
     old = pd.read_csv(filename, index_col=0, parse_dates=True) if os.path.exists(filename) else None
     kept, degraded = {}, []
-    for t in new.columns:
-        n_new = new[t].dropna().shape[0]
+    expected = list(expected if expected is not None else new.columns)
+    tickers = list(dict.fromkeys(expected + (list(old.columns) if old is not None else [])))
+    for t in tickers:
+        series = new[t] if t in new.columns else pd.Series(dtype=float)
+        n_new = series.dropna().shape[0]
         n_old = old[t].dropna().shape[0] if old is not None and t in old.columns else 0
         if n_new >= max(min_rows, int(n_old * 0.9)):
-            kept[t] = new[t]
+            kept[t] = series
         elif n_old > 0:
             kept[t] = old[t]
             degraded.append(f"{t}(new={n_new}, kept old={n_old})")
@@ -91,17 +95,44 @@ def merge_and_save(new, filename, min_rows=1000):
     if not kept:
         raise SystemExit(f"{filename}: no valid columns at all")
     out = pd.DataFrame(kept).sort_index().dropna(how="all")
-    out.round(4).to_csv(filename)
+    if out.index.has_duplicates:
+        raise ValueError(f'{filename}: duplicate dates')
+    today = pd.Timestamp(today or pd.Timestamp.now(tz='UTC').date())
+    columns = {}
+    for ticker in expected:
+        values = out[ticker].dropna() if ticker in out else pd.Series(dtype=float)
+        latest = values.index.max() if len(values) else None
+        lag = (today.normalize() - pd.Timestamp(latest).normalize()).days if latest is not None else None
+        columns[ticker] = {'latest_date': str(pd.Timestamp(latest).date()) if latest is not None else None,
+                           'age_calendar_days': lag, 'rows': len(values)}
+        if lag is None or lag > 7:
+            degraded.append(f'{ticker}(missing or older than 7 calendar days)')
+    quality = {'checked_date': str(today.date()), 'columns': columns, 'warnings': degraded}
+    with open(filename.replace('.csv', '_quality.json'), 'w', encoding='utf-8') as f:
+        json.dump(quality, f, ensure_ascii=False, indent=2)
+    temporary = filename + '.tmp'
+    out.round(4).to_csv(temporary)
+    os.replace(temporary, filename)
     status = f"{filename}: {len(out)} rows, {len(kept)} tickers, ~{out.dropna(how='all').index[-1].date()}"
     if degraded:
         status += f" | DEGRADED: {', '.join(degraded)}"
         print(f"::warning::{filename} degraded tickers: {', '.join(degraded)}")
     print(status)
+    return quality
 
 
-us = fetch(US_TICKERS)
-merge_and_save(us[[c for c in US_TICKERS if c in us.columns]], "us_etf_daily.csv", 1000)
+def main():
+    us = fetch(US_TICKERS)
+    uq = merge_and_save(us, 'us_etf_daily.csv', 1000, expected=US_TICKERS)
+    cn_raw = fetch(list(CN_TICKERS.values()))
+    cn = cn_raw.rename(columns={v: k for k, v in CN_TICKERS.items()})
+    cq = merge_and_save(cn, 'cn_etf_daily.csv', 800, expected=list(CN_TICKERS))
+    # Optional ETF gaps are explicit warnings; complete market failure is fatal.
+    for quality in (uq, cq):
+        if not any(c['age_calendar_days'] is not None and 0 <= c['age_calendar_days'] <= 7
+                   for c in quality['columns'].values()):
+            raise SystemExit('No recent market data; refusing to publish stale data as current')
 
-cn_raw = fetch(list(CN_TICKERS.values()))
-cn = cn_raw.rename(columns={v: k for k, v in CN_TICKERS.items()})
-merge_and_save(cn[[c for c in CN_TICKERS.keys() if c in cn.columns]], "cn_etf_daily.csv", 800)
+
+if __name__ == '__main__':
+    main()

@@ -20,6 +20,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: cn-filings
+  cancel-in-progress: false
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -36,18 +40,23 @@ jobs:
 
       - name: Resolve codes
         id: codes
+        env:
+          INPUT_CODES: ${{ inputs.codes }}
         run: |
-          if [ -n "${{ inputs.codes }}" ]; then
-            echo "list=${{ inputs.codes }}" >> "$GITHUB_OUTPUT"
+          if [ -n "$INPUT_CODES" ]; then
+            echo "list=$INPUT_CODES" >> "$GITHUB_OUTPUT"
           else
             echo "list=$(tr -d ' \n' < filings_codes.txt)" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Fetch filings
+        env:
+          FILINGS_CODES: ${{ steps.codes.outputs.list }}
+          FILINGS_YEARS: ${{ inputs.years || '2025,2026' }}
         run: |
           python3 fetch_filings.py \
-            --codes "${{ steps.codes.outputs.list }}" \
-            --years "${{ inputs.years || '2025,2026' }}" \
+            --codes "$FILINGS_CODES" \
+            --years "$FILINGS_YEARS" \
             --out dist
 
       - name: Summary
@@ -66,17 +75,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="cn-filings-$(date -u +%Y-%m-%d)"
-          # 先确保 release 存在（不带资产），再单独上传，避免 create 中途失败导致回滚
-          gh release view "$TAG" >/dev/null 2>&1 || \
-            gh release create "$TAG" --title "$TAG" --notes "A股定期报告全文与关键科目（自动抓取）"
-          gh release upload "$TAG" dist/* --clobber
+          TAG="cn-filings-$(date -u +%F)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          python release_data.py publish "$TAG" --out dist
 
       - name: Update manifest in repo
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="cn-filings-$(date -u +%Y-%m-%d)"
+          TAG="cn-filings-$(date -u +%F)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           printf '{"release_tag": "%s", "updated_utc": "%s"}\n' "$TAG" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > cn_filings_manifest.json
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
