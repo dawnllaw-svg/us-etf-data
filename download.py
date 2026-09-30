@@ -75,6 +75,37 @@ def fetch(tickers):
     raise SystemExit(f"download failed: {last_err}")
 
 
+def fetch_sina_etf(code):
+    """Fetch a long-history raw-price fallback for a known Yahoo gap."""
+    import akshare as ak
+    symbol = ('sh' if code.startswith(('5', '6')) else 'sz') + code
+    frame = ak.fund_etf_hist_sina(symbol=symbol)
+    if frame.empty:
+        raise ValueError(f'Sina returned no history for {code}')
+    dates = pd.to_datetime(frame['date'], errors='coerce')
+    close = pd.to_numeric(frame['close'], errors='coerce')
+    series = pd.Series(close.to_numpy(), index=pd.DatetimeIndex(dates), name=f'{code}.SS')
+    series = series.loc[series.index.notna()].dropna().sort_index()
+    series.index = series.index.tz_localize(None)
+    if series.index.has_duplicates or len(series) < 800:
+        raise ValueError(f'Sina history for {code} is incomplete or duplicated')
+    return series
+
+
+def install_sina_fallback(frame, ticker, fallback, min_primary_rows=800):
+    """Use the full alternate series only when Yahoo lacks the required history.
+
+    Never splice adjusted and raw price series together: that would create a
+    silent level discontinuity. The verified fallback replaces a short primary
+    history as one complete, date-indexed series.
+    """
+    if ticker in frame and frame[ticker].dropna().shape[0] >= min_primary_rows:
+        return frame
+    if fallback.name != ticker or fallback.dropna().shape[0] < min_primary_rows:
+        raise ValueError(f'Fallback series for {ticker} is invalid')
+    return frame.drop(columns=[ticker], errors='ignore').join(fallback, how='outer')
+
+
 def completed_sessions(frame, timezone, close_hour, now=None):
     """Do not publish an in-progress daily candle from a manual intraday run."""
     local = pd.Timestamp(now or pd.Timestamp.now(tz='UTC')).tz_convert(timezone)
@@ -134,7 +165,15 @@ def merge_and_save(new, filename, min_rows=1000, expected=None, today=None):
 def main():
     us = completed_sessions(fetch(US_TICKERS), 'America/New_York', 16)
     uq = merge_and_save(us, 'us_etf_daily.csv', 1000, expected=US_TICKERS)
-    cn_raw = completed_sessions(fetch(list(CN_TICKERS.values())), 'Asia/Shanghai', 15)
+    cn_raw = fetch(list(CN_TICKERS.values()))
+    # Yahoo currently returns no history for 银华日利 (511880), a configured
+    # optional cash-ETF fallback. Sina's raw-close series was cross-checked
+    # against Tushare fund_daily over its full 2013-04..2026-09 history.
+    try:
+        cn_raw = install_sina_fallback(cn_raw, '511880.SS', fetch_sina_etf('511880'))
+    except Exception as exc:
+        print(f'::warning::511880 Yahoo/Sina fallback unavailable: {type(exc).__name__}: {exc}')
+    cn_raw = completed_sessions(cn_raw, 'Asia/Shanghai', 15)
     cn = cn_raw.rename(columns={v: k for k, v in CN_TICKERS.items()})
     cq = merge_and_save(cn, 'cn_etf_daily.csv', 800, expected=list(CN_TICKERS))
     # Optional ETF gaps are explicit warnings; complete market failure is fatal.

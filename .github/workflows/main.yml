@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install yfinance pandas
+      - run: pip install yfinance pandas akshare
       - run: python -m unittest discover -s tests -v
       - run: python download.py
       - name: Commit and push if changed
