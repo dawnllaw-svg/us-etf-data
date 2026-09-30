@@ -67,6 +67,25 @@ class PipelineTests(unittest.TestCase):
             self.assertIsNone(q['columns']['C']['latest_date'])
             self.assertTrue(q['warnings'])
 
+    def test_sina_fallback_replaces_short_yahoo_series_without_splicing(self):
+        index = pd.date_range('2026-09-24', periods=3)
+        primary = pd.DataFrame({'511880.SS': [None, 100.82, None],
+                                '511990.SS': [100.1, 100.2, 100.3]}, index=index)
+        fallback = pd.Series([100.81, 100.829, 100.845], index=index,
+                             name='511880.SS')
+        result = download.install_sina_fallback(primary, '511880.SS', fallback,
+                                                min_primary_rows=3)
+        self.assertEqual(result['511880.SS'].tolist(), fallback.tolist())
+        self.assertEqual(result['511990.SS'].tolist(), primary['511990.SS'].tolist())
+
+    def test_sina_fallback_is_not_used_when_yahoo_history_is_complete(self):
+        index = pd.date_range('2026-09-01', periods=3)
+        primary = pd.DataFrame({'511880.SS': [100.1, 100.2, 100.3]}, index=index)
+        fallback = pd.Series([99.1, 99.2, 99.3], index=index, name='511880.SS')
+        result = download.install_sina_fallback(primary, '511880.SS', fallback,
+                                                min_primary_rows=3)
+        pd.testing.assert_frame_equal(result, primary)
+
     def test_historical_universe_provider_error_is_fatal(self):
         class Result:
             error_code = '1'
