@@ -1,229 +1,229 @@
 {
-  "checked_date": "2026-10-03",
+  "checked_date": "2026-10-06",
   "columns": {
     "510300": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3489
     },
     "510500": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3296
     },
     "512100": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2411
     },
     "510880": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 4554
     },
     "512010": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3153
     },
     "159928": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3173
     },
     "512800": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2234
     },
     "512880": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2465
     },
     "512660": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2465
     },
     "512480": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1781
     },
     "512690": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1804
     },
     "512400": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2207
     },
     "518880": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3206
     },
     "511010": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3288
     },
     "511990": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2911
     },
     "511880": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3271
     },
     "511660": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2404
     },
     "510050": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 4554
     },
     "510180": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 4554
     },
     "159901": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 4554
     },
     "159915": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3609
     },
     "159949": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2478
     },
     "588000": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1434
     },
     "159905": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3829
     },
     "512170": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1790
     },
     "159938": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2856
     },
     "159996": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1593
     },
     "512000": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2441
     },
     "510230": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3740
     },
     "512710": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1727
     },
     "159995": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1617
     },
     "515050": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1696
     },
     "159939": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2835
     },
     "512720": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1734
     },
     "515000": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1744
     },
     "515030": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1601
     },
     "515790": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1405
     },
     "516160": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1372
     },
     "515220": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1605
     },
     "159930": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3044
     },
     "512200": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2191
     },
     "512980": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2112
     },
     "159825": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 1401
     },
     "510410": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 3502
     },
     "512580": {
       "latest_date": "2026-09-30",
-      "age_calendar_days": 3,
+      "age_calendar_days": 6,
       "rows": 2336
     }
   },
