@@ -2,272 +2,230 @@
   "checked_date": "2026-10-09",
   "columns": {
     "510300": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 3489
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 3490
     },
     "510500": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 3296
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 3297
     },
     "512100": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2411
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2412
     },
     "510880": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 4554
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 4555
     },
     "512010": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 3153
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 3154
     },
     "159928": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 3173
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 3174
     },
     "512800": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2234
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2235
     },
     "512880": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2465
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2466
     },
     "512660": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2465
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2466
     },
     "512480": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1781
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1782
     },
     "512690": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1804
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1805
     },
     "512400": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2207
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2208
     },
     "518880": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 3206
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 3207
     },
     "511010": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 3288
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 3289
     },
     "511990": {
-      "latest_date": "2026-10-08",
-      "age_calendar_days": 1,
-      "rows": 2912
+      "latest_date": "2026-10-09",
+      "age_calendar_days": 0,
+      "rows": 2913
     },
     "511880": {
-      "latest_date": "2026-10-08",
-      "age_calendar_days": 1,
-      "rows": 3272
+      "latest_date": "2026-10-09",
+      "age_calendar_days": 0,
+      "rows": 3273
     },
     "511660": {
-      "latest_date": "2026-10-08",
-      "age_calendar_days": 1,
-      "rows": 2405
+      "latest_date": "2026-10-09",
+      "age_calendar_days": 0,
+      "rows": 2406
     },
     "510050": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 4554
-    },
-    "510180": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 4554
-    },
-    "159901": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 4554
-    },
-    "159915": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 3609
-    },
-    "159949": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2478
-    },
-    "588000": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1434
-    },
-    "159905": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 3829
-    },
-    "512170": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1790
-    },
-    "159938": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2856
-    },
-    "159996": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1593
-    },
-    "512000": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2441
-    },
-    "510230": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 3740
-    },
-    "512710": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1727
-    },
-    "159995": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1617
-    },
-    "515050": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1696
-    },
-    "159939": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2835
-    },
-    "512720": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1734
-    },
-    "515000": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1744
-    },
-    "515030": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1601
-    },
-    "515790": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1405
-    },
-    "516160": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1372
-    },
-    "515220": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1605
-    },
-    "159930": {
       "latest_date": "2026-10-08",
       "age_calendar_days": 1,
-      "rows": 3045
+      "rows": 4555
+    },
+    "510180": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 4555
+    },
+    "159901": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 4555
+    },
+    "159915": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 3610
+    },
+    "159949": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2479
+    },
+    "588000": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1435
+    },
+    "159905": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 3830
+    },
+    "512170": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1791
+    },
+    "159938": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2857
+    },
+    "159996": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1594
+    },
+    "512000": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2442
+    },
+    "510230": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 3741
+    },
+    "512710": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1728
+    },
+    "159995": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1618
+    },
+    "515050": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1697
+    },
+    "159939": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2836
+    },
+    "512720": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1735
+    },
+    "515000": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1745
+    },
+    "515030": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1602
+    },
+    "515790": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1406
+    },
+    "516160": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1373
+    },
+    "515220": {
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1606
+    },
+    "159930": {
+      "latest_date": "2026-10-09",
+      "age_calendar_days": 0,
+      "rows": 3046
     },
     "512200": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2191
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2192
     },
     "512980": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2112
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2113
     },
     "159825": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 1401
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 1402
     },
     "510410": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 3502
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 3503
     },
     "512580": {
-      "latest_date": "2026-09-30",
-      "age_calendar_days": 9,
-      "rows": 2336
+      "latest_date": "2026-10-08",
+      "age_calendar_days": 1,
+      "rows": 2337
     }
   },
-  "warnings": [
-    "510300(missing or older than 7 calendar days)",
-    "510500(missing or older than 7 calendar days)",
-    "512100(missing or older than 7 calendar days)",
-    "510880(missing or older than 7 calendar days)",
-    "512010(missing or older than 7 calendar days)",
-    "159928(missing or older than 7 calendar days)",
-    "512800(missing or older than 7 calendar days)",
-    "512880(missing or older than 7 calendar days)",
-    "512660(missing or older than 7 calendar days)",
-    "512480(missing or older than 7 calendar days)",
-    "512690(missing or older than 7 calendar days)",
-    "512400(missing or older than 7 calendar days)",
-    "518880(missing or older than 7 calendar days)",
-    "511010(missing or older than 7 calendar days)",
-    "510050(missing or older than 7 calendar days)",
-    "510180(missing or older than 7 calendar days)",
-    "159901(missing or older than 7 calendar days)",
-    "159915(missing or older than 7 calendar days)",
-    "159949(missing or older than 7 calendar days)",
-    "588000(missing or older than 7 calendar days)",
-    "159905(missing or older than 7 calendar days)",
-    "512170(missing or older than 7 calendar days)",
-    "159938(missing or older than 7 calendar days)",
-    "159996(missing or older than 7 calendar days)",
-    "512000(missing or older than 7 calendar days)",
-    "510230(missing or older than 7 calendar days)",
-    "512710(missing or older than 7 calendar days)",
-    "159995(missing or older than 7 calendar days)",
-    "515050(missing or older than 7 calendar days)",
-    "159939(missing or older than 7 calendar days)",
-    "512720(missing or older than 7 calendar days)",
-    "515000(missing or older than 7 calendar days)",
-    "515030(missing or older than 7 calendar days)",
-    "515790(missing or older than 7 calendar days)",
-    "516160(missing or older than 7 calendar days)",
-    "515220(missing or older than 7 calendar days)",
-    "512200(missing or older than 7 calendar days)",
-    "512980(missing or older than 7 calendar days)",
-    "159825(missing or older than 7 calendar days)",
-    "510410(missing or older than 7 calendar days)",
-    "512580(missing or older than 7 calendar days)"
-  ]
+  "warnings": []
 }
