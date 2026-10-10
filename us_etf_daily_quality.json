@@ -1,49 +1,49 @@
 {
-  "checked_date": "2026-10-09",
+  "checked_date": "2026-10-10",
   "columns": {
     "SPY": {
       "latest_date": "2026-10-09",
-      "age_calendar_days": 0,
+      "age_calendar_days": 1,
       "rows": 6985
     },
     "QQQ": {
       "latest_date": "2026-10-09",
-      "age_calendar_days": 0,
+      "age_calendar_days": 1,
       "rows": 6940
     },
     "IWM": {
       "latest_date": "2026-10-09",
-      "age_calendar_days": 0,
+      "age_calendar_days": 1,
       "rows": 6632
     },
     "EFA": {
       "latest_date": "2026-10-09",
-      "age_calendar_days": 0,
+      "age_calendar_days": 1,
       "rows": 6317
     },
     "EEM": {
       "latest_date": "2026-10-09",
-      "age_calendar_days": 0,
+      "age_calendar_days": 1,
       "rows": 5911
     },
     "TLT": {
       "latest_date": "2026-10-09",
-      "age_calendar_days": 0,
+      "age_calendar_days": 1,
       "rows": 6089
     },
     "GLD": {
       "latest_date": "2026-10-09",
-      "age_calendar_days": 0,
+      "age_calendar_days": 1,
       "rows": 5507
     },
     "SHY": {
       "latest_date": "2026-10-09",
-      "age_calendar_days": 0,
+      "age_calendar_days": 1,
       "rows": 6089
     },
     "BIL": {
       "latest_date": "2026-10-09",
-      "age_calendar_days": 0,
+      "age_calendar_days": 1,
       "rows": 4873
     }
   },
